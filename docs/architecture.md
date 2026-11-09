@@ -69,7 +69,7 @@ The browser uses REST for request/response operations:
 3. Fetch previous messages and the current online-user snapshot.
 4. Delete owned messages through the documented endpoint.
 
-JSON response shapes and errors are defined in [api-contract.md](api-contract.md). Authentication credentials are sent according to the session transport decision, currently **TODO: Team Decision Required**.
+JSON response shapes and errors are defined in [api-contract.md](api-contract.md). Authentication uses a server-side session credential in a Secure, HttpOnly cookie. State-changing cookie-authenticated requests also require CSRF protection.
 
 ## WebSocket Communication
 
@@ -90,15 +90,14 @@ The server is authoritative: clients must not treat a locally rendered message o
 ### Deleting a message
 
 1. A client sends `DELETE /api/messages/{message_id}`.
-2. The backend verifies that the requester owns the message.
-3. The backend marks or removes the message according to the deletion policy, which is **TODO: Team Decision Required**.
-4. The backend broadcasts `message_deleted` to connected clients.
-5. All clients remove or mark the message consistently.
+2. The backend verifies that the requester owns the message and hard-deletes it.
+3. The backend broadcasts `message_deleted` to connected clients.
+4. All clients remove the message consistently.
 
-## Architectural Decisions Still Required
+## Approved decisions and remaining implementation details
 
-- Session transport: secure cookie or bearer token.
-- Password hashing library and authentication token format.
-- Soft deletion versus hard deletion for messages.
-- Backend package layout and supported runtime versions.
-- Multi-process deployment and presence coordination, if needed beyond one backend process.
+- Session transport is a server-side session in a Secure, HttpOnly cookie.
+- Passwords use Argon2id; only a hash of the session credential is stored.
+- Messages use hard deletion.
+- History uses cursor-based pagination.
+- Backend package layout, supported runtime versions, cursor parameter limits, and multi-process presence coordination remain implementation details to document when selected. Multi-process coordination is outside V1.

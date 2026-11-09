@@ -11,7 +11,7 @@ All endpoints use JSON unless stated otherwise. The backend is authoritative for
 }
 ```
 
-The authentication transport (secure cookie or bearer token) is **TODO: Team Decision Required**. “Authenticated” below means a valid, unexpired, non-revoked session is supplied using that agreed transport.
+Authentication uses a valid, unexpired, non-revoked server-side session carried by a Secure, HttpOnly cookie. State-changing requests also include the agreed CSRF protection.
 
 ## `POST /api/auth/register`
 
@@ -68,7 +68,7 @@ Possible errors: `400 invalid_request`, `409 username_taken`, `422 validation_er
 }
 ```
 
-Authentication is not required. The session credential is returned or set according to the unresolved authentication transport decision.
+Authentication is not required. The server sets the session cookie; the session credential is not returned in JSON.
 
 Possible errors: `401 invalid_credentials`, `422 validation_error`.
 
@@ -108,7 +108,12 @@ Possible errors: `401 unauthenticated`.
 
 **Purpose:** Retrieve previous messages for the shared chatroom.
 
-**Request:** No required body. Pagination parameters are **TODO: Team Decision Required**. If pagination is introduced, it must preserve chronological ordering and document its query parameters.
+**Request:** Optional query parameters:
+
+- `cursor`: opaque cursor returned by the previous page; omit for the first page.
+- `limit`: positive page size within the server-defined maximum.
+
+Results use stable chronological ordering and return an opaque `next_cursor` when more history is available.
 
 **Response: `200 OK`**
 
@@ -122,10 +127,10 @@ Possible errors: `401 unauthenticated`.
         "username": "ada"
       },
       "content": "Hello, everyone!",
-      "created_at": "2026-11-09T22:57:22Z",
-      "deleted_at": null
+      "created_at": "2026-11-09T22:57:22Z"
     }
-  ]
+  ],
+  "next_cursor": "opaque-cursor-or-null"
 }
 ```
 
@@ -141,7 +146,7 @@ Possible errors: `401 unauthenticated`, `500 internal_error`.
 
 **Response: `204 No Content`**
 
-Authentication is required. The server must verify ownership before deletion and broadcast the documented `message_deleted` event.
+Authentication is required. The server must verify ownership, hard-delete the row, and broadcast the documented `message_deleted` event.
 
 Possible errors: `400 invalid_message_id`, `401 unauthenticated`, `403 message_not_owned`, `404 message_not_found`.
 

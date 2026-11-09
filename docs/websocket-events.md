@@ -8,7 +8,7 @@ Clients connect to:
 /ws/chat
 ```
 
-The connection must be authenticated using the session transport selected by the team. An unauthenticated or expired session is rejected. The chatroom is shared; no room identifier is sent because V1 has exactly one room.
+The connection must be authenticated using the server-side session in the Secure, HttpOnly cookie. An unauthenticated, expired, or revoked session is rejected. The chatroom is shared; no room identifier is sent because V1 has exactly one room.
 
 All application messages are JSON objects with an `event` discriminator and a `payload` object:
 
@@ -62,8 +62,7 @@ Invalid input produces an `error` event to the requesting client. The message le
     "username": "ada"
   },
   "content": "Hello, everyone!",
-  "created_at": "2026-11-09T22:57:22Z",
-  "deleted_at": null
+  "created_at": "2026-11-09T22:57:22Z"
 }
 ```
 
@@ -79,8 +78,7 @@ Invalid input produces an `error` event to the requesting client. The message le
       "username": "ada"
     },
     "content": "Hello, everyone!",
-    "created_at": "2026-11-09T22:57:22Z",
-    "deleted_at": null
+    "created_at": "2026-11-09T22:57:22Z"
   }
 }
 ```
@@ -95,8 +93,7 @@ Clients append or reconcile this message using its server ID. The server sends i
 
 ```json
 {
-  "message_id": "uuid",
-  "deleted_at": "2026-11-09T22:58:00Z"
+  "message_id": "uuid"
 }
 ```
 
@@ -106,13 +103,12 @@ Clients append or reconcile this message using its server ID. The server sends i
 {
   "event": "message_deleted",
   "payload": {
-    "message_id": "uuid",
-    "deleted_at": "2026-11-09T22:58:00Z"
+    "message_id": "uuid"
   }
 }
 ```
 
-Clients update the matching message consistently. Whether the UI removes the message or displays a deletion marker follows the database/API deletion decision, currently **TODO: Team Decision Required**.
+Clients remove the matching message. The row is hard-deleted and is not returned by later history requests.
 
 ## Server-to-Client: `online_users`
 
@@ -182,4 +178,4 @@ Clients should show a safe, useful error and leave existing confirmed messages u
 - A `message_deleted` event follows successful authorization and deletion operation.
 - Presence changes are broadcast after the connection manager updates its state.
 - Clients should handle duplicate events idempotently by ID where practical.
-- Reconnect behavior, backoff, and whether missed events are replayed are **TODO: Team Decision Required**. REST history retrieval remains the source for recovering missed messages.
+- Reconnect behavior and backoff are frontend implementation details. Missed events are not replayed; REST history retrieval is the source for recovering missed messages.

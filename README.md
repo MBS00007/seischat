@@ -40,7 +40,12 @@ Private messaging, multiple chatrooms, groups, voice/video calls, file/image sha
 seischat/
 ├── frontend/                 # React and Tailwind CSS application
 ├── backend/                  # FastAPI modular monolith
+├── .github/
+│   └── copilot-instructions.md
 ├── docs/
+│   ├── team/
+│   ├── engineering-guides/
+│   ├── learning/
 │   ├── architecture.md
 │   ├── requirements.md
 │   ├── database-design.md
@@ -111,7 +116,7 @@ Copy `.env.example` to `.env` and set:
 - `SESSION_EXPIRE_MINUTES`: session lifetime in minutes.
 - `FRONTEND_URL`: allowed frontend origin for local development and CORS.
 
-The exact session transport (cookie or bearer token) is **TODO: Team Decision Required**. See [the API contract](docs/api-contract.md) and [database design](docs/database-design.md).
+Authentication uses server-side sessions in Secure, HttpOnly cookies, with Argon2id password hashing and CSRF protection. See [the API contract](docs/api-contract.md) and [database design](docs/database-design.md).
 
 ## Documentation
 
@@ -121,6 +126,7 @@ The exact session transport (cookie or bearer token) is **TODO: Team Decision Re
 - [REST API contract](docs/api-contract.md)
 - [WebSocket events](docs/websocket-events.md)
 - [Coding standards](docs/coding-standards.md)
+- [Engineering Handbook](docs/team/team.md)
 
 ## Team Contribution Guidelines
 
