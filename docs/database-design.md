@@ -29,7 +29,6 @@ erDiagram
         uuid user_id FK
         text content
         timestamptz created_at
-        timestamptz deleted_at
     }
 ```
 
@@ -62,7 +61,7 @@ Stores server-recognized authenticated sessions. A session must reference one us
 | `created_at` | TIMESTAMPTZ | Not null, default | Session creation time |
 | `revoked_at` | TIMESTAMPTZ | Nullable | Logout/revocation time |
 
-Whether the raw credential is carried in a secure cookie or an authorization header is **TODO: Team Decision Required**. Only a hash should be stored in this table.
+The raw credential is carried in a Secure, HttpOnly cookie. Only a hash should be stored in this table.
 
 ### `messages`
 
@@ -74,9 +73,8 @@ Stores messages sent in the single shared chatroom.
 | `user_id` | UUID | Not null, foreign key to `users.id` | Author |
 | `content` | TEXT | Not null | Message body |
 | `created_at` | TIMESTAMPTZ | Not null, default | Original send time |
-| `deleted_at` | TIMESTAMPTZ | Nullable | Deletion time, if soft deletion is chosen |
 
-The `deleted_at` column supports a consistent deletion marker while preserving historical rows. Whether V1 uses soft deletion or hard deletion is **TODO: Team Decision Required**; the API and event contract must expose one consistent behavior.
+Messages use hard deletion in V1. A successful ownership-checked delete removes the row and clients receive `message_deleted`.
 
 ## Relationships
 
@@ -84,7 +82,7 @@ The `deleted_at` column supports a consistent deletion marker while preserving h
 - One user can author many messages.
 - Each session belongs to exactly one user.
 - Each message belongs to exactly one author.
-- Deleting a user must not silently orphan messages; the deletion policy is **TODO: Team Decision Required**.
+- Deleting a user must not silently orphan messages; the final foreign-key delete behavior must be documented before user deletion is implemented.
 
 ## Constraints and Indexes
 
@@ -98,7 +96,7 @@ The `deleted_at` column supports a consistent deletion marker while preserving h
 - Index `messages.user_id` for ownership checks and user-related queries.
 - Index `sessions.user_id` and `sessions.expires_at` for session validation and cleanup.
 
-Exact UUID generation, message length limit, deletion policy, and foreign-key delete behavior are **TODO: Team Decision Required**.
+Exact UUID generation, message length limit, and foreign-key delete behavior are implementation details that must be documented before migrations are finalized. V1 deletion policy is hard deletion.
 
 ## Message History and Presence
 
