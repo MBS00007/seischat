@@ -1,15 +1,22 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import AuthLayout from '../components/auth/AuthLayout.jsx'
 import PasswordInput from '../components/auth/PasswordInput.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function Login() {
+  const { clearError, error, isSubmitting, login } = useAuth()
+  const location = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(
+    location.state?.sessionExpired
+      ? 'Your session expired. Please sign in again.'
+      : location.state?.notice || '',
+  )
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = {}
@@ -22,11 +29,14 @@ function Login() {
 
     setErrors(nextErrors)
     setNotice('')
+    clearError()
 
     if (Object.keys(nextErrors).length === 0) {
-      setNotice(
-        'Your details are ready. Login will be connected to the backend in the next phase; no request was sent.',
-      )
+      try {
+        await login(username, password)
+      } catch {
+        // The auth context exposes the request error for display below.
+      }
     }
   }
 
@@ -40,7 +50,7 @@ function Login() {
         <>
           New to SeisChat?{' '}
           <Link
-            className="font-medium text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            className="font-medium text-blue-300 underline-offset-4 transition-colors hover:text-blue-200 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             to="/register"
           >
             Create an account
@@ -63,13 +73,14 @@ function Login() {
             }
             aria-invalid={Boolean(errors.username)}
             autoComplete="username"
-            className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 hover:border-white/20 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
+            className="w-full rounded-lg border border-slate-700 bg-[#0d141c] px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 hover:border-slate-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
             id="login-username"
             name="username"
             onChange={(event) => {
               setUsername(event.target.value)
               setErrors((current) => ({ ...current, username: '' }))
               setNotice('')
+              clearError()
             }}
             placeholder="Your username"
             required
@@ -97,13 +108,22 @@ function Login() {
             setPassword(event.target.value)
             setErrors((current) => ({ ...current, password: '' }))
             setNotice('')
+            clearError()
           }}
           value={password}
         />
 
+        {error && (
+          <p
+            className="rounded-lg border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm leading-6 text-rose-200"
+            role="alert"
+          >
+            {error.message}
+          </p>
+        )}
         {notice && (
           <p
-            className="rounded-xl border border-cyan-300/20 bg-cyan-300/5 px-4 py-3 text-sm leading-6 text-cyan-100"
+            className="rounded-lg border border-blue-400/25 bg-blue-400/10 px-4 py-3 text-sm leading-6 text-blue-100"
             role="status"
           >
             {notice}
@@ -111,10 +131,11 @@ function Login() {
         )}
 
         <button
-          className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/40 transition duration-200 hover:-translate-y-0.5 hover:from-blue-400 hover:to-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 active:translate-y-0"
+          className="w-full rounded-lg bg-blue-700 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111923] active:bg-blue-800"
+          disabled={isSubmitting}
           type="submit"
         >
-          Log in
+          {isSubmitting ? 'Signing in…' : 'Log in'}
         </button>
       </form>
     </AuthLayout>
