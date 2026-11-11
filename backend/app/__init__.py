@@ -1,0 +1,1 @@
+"""SeisChat backend application package."""
