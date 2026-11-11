@@ -13,6 +13,10 @@ All endpoints use JSON unless stated otherwise. The backend is authoritative for
 
 Authentication uses a valid, unexpired, non-revoked server-side session carried by a Secure, HttpOnly cookie. State-changing requests also include the agreed CSRF protection.
 
+### CSRF integration status
+
+The frontend cannot yet implement the required CSRF protection because this contract does not define how to obtain a token, the CSRF cookie name and attributes, the request header name, the token format/validation rules, or any endpoint exemptions. The backend and frontend owners must agree on and document these details before state-changing authentication requests can be verified as integrated. The frontend must not guess the mechanism or bypass server checks.
+
 ## `POST /api/auth/register`
 
 **Purpose:** Create a user account.
