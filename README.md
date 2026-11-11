@@ -57,7 +57,9 @@ seischat/
 └── README.md
 ```
 
-The `frontend/` and `backend/` directories are intentionally empty until implementation work begins.
+The `frontend/` contains the current React application and `backend/` contains
+the Phase 1 FastAPI foundation. See the [backend guide](backend/README.md) for
+setup, testing, and migration instructions.
 
 ## Development Setup
 
@@ -82,22 +84,25 @@ Do not commit `.env`. Replace every placeholder with local development values. T
 
 ### Run the backend
 
-The backend implementation and dependency manifest are not created yet. Once they exist, the expected local workflow is:
+The backend uses a Python virtual environment so its packages stay isolated
+from the rest of the computer:
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt  # TODO: Team Decision Required: dependency workflow
-alembic upgrade head
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
 uvicorn app.main:app --reload
 ```
 
-The backend host, port, and migration workflow are **TODO: Team Decision Required** until implementation is added.
+The API is available at `http://127.0.0.1:8000`; Phase 1 exposes `GET /health`.
+There are no models or migration revisions yet, so Alembic should be used
+only after a later phase adds the first model.
+
+Run backend tests from `backend/` with `pytest`.
 
 ### Run the frontend
-
-The frontend implementation and package manifest are not created yet. Once they exist, the expected local workflow is:
 
 ```bash
 cd frontend
@@ -105,7 +110,9 @@ npm install
 npm run dev
 ```
 
-The frontend development command and port are **TODO: Team Decision Required** until the project scaffold is added.
+Vite serves the frontend at `http://localhost:5173` by default. The frontend
+API client reads `VITE_API_BASE_URL` and sends cookie credentials; configure it
+to point to the backend URL when connecting the authentication phase.
 
 ## Environment Variables
 
@@ -114,7 +121,7 @@ Copy `.env.example` to `.env` and set:
 - `DATABASE_URL`: PostgreSQL connection URL.
 - `SECRET_KEY`: secret used by the backend for authentication-related signing or encryption.
 - `SESSION_EXPIRE_MINUTES`: session lifetime in minutes.
-- `FRONTEND_URL`: allowed frontend origin for local development and CORS.
+- `FRONTEND_ORIGIN`: allowed frontend origin for local development and CORS.
 
 Authentication uses server-side sessions in Secure, HttpOnly cookies, with Argon2id password hashing and CSRF protection. See [the API contract](docs/api-contract.md) and [database design](docs/database-design.md).
 
