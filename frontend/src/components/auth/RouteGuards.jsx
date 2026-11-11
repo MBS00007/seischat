@@ -7,8 +7,35 @@ import {
 
 function SessionLoading() {
   return (
-    <main aria-busy="true" className="p-8 text-center text-slate-300">
-      <p role="status">Checking your session…</p>
+    <main
+      aria-busy="true"
+      className="flex min-h-dvh items-center justify-center bg-[#0b1118] p-8 text-slate-300"
+    >
+      <p className="inline-flex items-center gap-3" role="status">
+        <svg
+          aria-hidden="true"
+          className="size-5 animate-spin text-blue-300"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            d="M4 12a8 8 0 0 1 8-8"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="4"
+          />
+        </svg>
+        Checking your session…
+      </p>
     </main>
   )
 }

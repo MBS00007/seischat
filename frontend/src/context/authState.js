@@ -1,9 +1,12 @@
+import { ApiError } from '../services/apiClient.js'
+
 export const initialAuthState = {
   user: null,
   isLoading: true,
   isSubmitting: false,
   sessionExpired: false,
   error: null,
+  bootstrapError: null,
 }
 
 export function authReducer(state, action) {
@@ -15,6 +18,7 @@ export function authReducer(state, action) {
         isLoading: false,
         sessionExpired: false,
         error: null,
+        bootstrapError: null,
       }
     case 'sessionExpired':
       return {
@@ -24,6 +28,7 @@ export function authReducer(state, action) {
         isSubmitting: false,
         sessionExpired: true,
         error: null,
+        bootstrapError: null,
       }
     case 'loggedOut':
       return {
@@ -38,7 +43,7 @@ export function authReducer(state, action) {
         ...state,
         user: null,
         isLoading: false,
-        error: action.error,
+        bootstrapError: action.error,
       }
     case 'submissionStarted':
       return { ...state, isSubmitting: true, error: null }
@@ -69,14 +74,23 @@ function isExpiredSessionError(error) {
   )
 }
 
+function isUnauthenticatedSessionError(error) {
+  return error?.status === 401 || error?.code === 'unauthenticated'
+}
+
 export function createAuthActions(service, dispatch) {
   return {
     async loadCurrentUser() {
       try {
         const response = await service.getCurrentUser()
+        if (!response?.user) {
+          throw new ApiError('The session response did not include a user.', {
+            code: 'invalid_response',
+          })
+        }
         dispatch({ type: 'sessionResolved', user: response.user })
       } catch (error) {
-        if (isExpiredSessionError(error)) {
+        if (isUnauthenticatedSessionError(error)) {
           dispatch({ type: 'sessionExpired' })
         } else {
           dispatch({ type: 'bootstrapFailed', error })
@@ -89,7 +103,9 @@ export function createAuthActions(service, dispatch) {
       try {
         const response = await service.login(username, password)
         if (!response?.user) {
-          throw new Error('The login response did not include a user.')
+          throw new ApiError('The login response did not include a user.', {
+            code: 'invalid_response',
+          })
         }
         dispatch({ type: 'loginSucceeded', user: response.user })
         return response
@@ -103,6 +119,12 @@ export function createAuthActions(service, dispatch) {
       dispatch({ type: 'submissionStarted' })
       try {
         const response = await service.register(username, password)
+        if (!response?.user) {
+          throw new ApiError(
+            'The registration response did not include a user.',
+            { code: 'invalid_response' },
+          )
+        }
         dispatch({ type: 'submissionSucceeded' })
         return response
       } catch (error) {

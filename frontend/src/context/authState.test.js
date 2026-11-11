@@ -57,6 +57,23 @@ test('session bootstrap treats 401 as an expired unauthenticated session', async
   assert.equal(harness.state.isLoading, false)
   assert.equal(harness.state.sessionExpired, true)
   assert.equal(harness.state.error, null)
+  assert.equal(harness.state.bootstrapError, null)
+})
+
+test('session bootstrap keeps 404 endpoint failures available for user feedback', async () => {
+  const serviceError = { status: 404, code: 'session_not_found' }
+  const harness = createHarness({
+    async getCurrentUser() {
+      throw serviceError
+    },
+  })
+
+  await harness.actions.loadCurrentUser()
+
+  assert.equal(harness.state.isLoading, false)
+  assert.equal(harness.state.sessionExpired, false)
+  assert.equal(harness.state.error, null)
+  assert.equal(harness.state.bootstrapError, serviceError)
 })
 
 test('session bootstrap retains unexpected errors for user feedback', async () => {
@@ -70,7 +87,21 @@ test('session bootstrap retains unexpected errors for user feedback', async () =
   await harness.actions.loadCurrentUser()
 
   assert.equal(harness.state.isLoading, false)
-  assert.equal(harness.state.error, serviceError)
+  assert.equal(harness.state.bootstrapError, serviceError)
+})
+
+test('session bootstrap rejects a successful response without a user', async () => {
+  const harness = createHarness({
+    async getCurrentUser() {
+      return {}
+    },
+  })
+
+  await harness.actions.loadCurrentUser()
+
+  assert.equal(harness.state.isLoading, false)
+  assert.equal(harness.state.user, null)
+  assert.equal(harness.state.bootstrapError.code, 'invalid_response')
 })
 
 test('login updates authenticated state using the returned user', async () => {
@@ -100,6 +131,20 @@ test('registration does not authenticate because the contract creates no session
 
   assert.equal(harness.state.user, null)
   assert.equal(harness.state.isSubmitting, false)
+})
+
+test('registration does not report success for a response without a user', async () => {
+  const harness = createHarness({
+    async register() {
+      return {}
+    },
+  })
+
+  await assert.rejects(harness.actions.register('ada', 'secret'))
+
+  assert.equal(harness.state.user, null)
+  assert.equal(harness.state.isSubmitting, false)
+  assert.equal(harness.state.error.code, 'invalid_response')
 })
 
 test('successful logout clears authenticated state', async () => {

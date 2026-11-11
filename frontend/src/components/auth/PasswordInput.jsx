@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 function PasswordInput({
   autoComplete,
+  disabled = false,
   error,
   id,
   label,
@@ -26,6 +27,7 @@ function PasswordInput({
           aria-invalid={Boolean(error)}
           autoComplete={autoComplete}
           className="w-full rounded-lg border border-slate-700 bg-[#0d141c] px-4 py-3 pr-12 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 hover:border-slate-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+          disabled={disabled}
           id={id}
           name={name}
           onChange={onChange}
@@ -38,6 +40,7 @@ function PasswordInput({
           aria-pressed={isVisible}
           className="absolute inset-y-0 right-0 flex items-center rounded-r-lg px-4 text-slate-400 transition-colors hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400"
           onClick={() => setIsVisible((visible) => !visible)}
+          disabled={disabled}
           type="button"
         >
           {isVisible ? (
